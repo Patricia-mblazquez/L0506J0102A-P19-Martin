@@ -78,6 +78,13 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 
+static GPIO_InitTypeDef GPIO_InitStruct;
+
+uint32_t tiempo = 500;
+uint32_t tiempo_ld1 = 0;
+uint32_t tiempo_ld2 = 0;
+uint32_t tiempo_ld3 = 0;
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -105,6 +112,34 @@ int main(void)
 
   /* Add your application code here
      */
+	
+	// INICIALIZACION LEDS
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+	
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_0;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_7;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_14;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	//INICIALIZACION PULSADOR B1
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_13;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+	
+	
 
 #ifdef RTE_CMSIS_RTOS2
   /* Initialize CMSIS-RTOS2 */
@@ -120,7 +155,41 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
+		HAL_Delay(125);
+
+    tiempo_ld1 += 125;
+    tiempo_ld2 += 125;
+    tiempo_ld3 += 125;
+
+    if (tiempo_ld1 >= tiempo)
+    {
+        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+        tiempo_ld1 = 0;
+    }
+
+    if (tiempo_ld2 >= tiempo * 2)
+    {
+        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+        tiempo_ld2 = 0;
+    }
+
+    if (tiempo_ld3 >= tiempo * 4)
+    {
+        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+        tiempo_ld3 = 0;
+    }
   }
+}
+
+ // Funcion Callback de la interrupción
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin == GPIO_PIN_13){
+		if (tiempo != 125)
+			tiempo = tiempo / 2;
+		else
+			tiempo = 500;
+	}
 }
 
 /**
