@@ -51,3 +51,9 @@ tmp/
 
 # Quitar MD por el momento
 *.md
+
+# Archivos base generados por CMSIS-Pack
+*.base@*
+
+# Even Recorder
+*.scvd
