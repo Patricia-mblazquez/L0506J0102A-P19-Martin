@@ -30,6 +30,11 @@
 #include "cmsis_os2.h"                  // ::CMSIS:RTOS2
 #endif
 
+#define PORT_RGB 	GPIOD
+#define PIN_GREEN	GPIO_PIN_12
+#define PIN_BLUE	GPIO_PIN_11
+#define PIN_RED		GPIO_PIN_13
+
 #ifdef RTE_CMSIS_RTOS2_RTX5
 /**
   * Override default HAL_GetTick function
@@ -114,20 +119,20 @@ int main(void)
      */
 	
 	// INICIALIZACION LEDS
-		__HAL_RCC_GPIOB_CLK_ENABLE();
+		__HAL_RCC_GPIOD_CLK_ENABLE();
 	
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 	
-	GPIO_InitStruct.Pin = GPIO_PIN_0;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = PIN_GREEN;
+	HAL_GPIO_Init(PORT_RGB, &GPIO_InitStruct);
 	
-	GPIO_InitStruct.Pin = GPIO_PIN_7;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = PIN_BLUE;
+	HAL_GPIO_Init(PORT_RGB, &GPIO_InitStruct);
 	
-	GPIO_InitStruct.Pin = GPIO_PIN_14;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = PIN_RED;
+	HAL_GPIO_Init(PORT_RGB, &GPIO_InitStruct);
 	
 	//INICIALIZACION PULSADOR B1
 	__HAL_RCC_GPIOC_CLK_ENABLE();
@@ -163,19 +168,19 @@ int main(void)
 
     if (tiempo_ld1 >= tiempo)
     {
-        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+        HAL_GPIO_TogglePin(PORT_RGB, PIN_GREEN);
         tiempo_ld1 = 0;
     }
 
     if (tiempo_ld2 >= tiempo * 2)
     {
-        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+        HAL_GPIO_TogglePin(PORT_RGB, PIN_BLUE);
         tiempo_ld2 = 0;
     }
 
     if (tiempo_ld3 >= tiempo * 4)
     {
-        HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_14);
+        HAL_GPIO_TogglePin(PORT_RGB, PIN_RED);
         tiempo_ld3 = 0;
     }
   }
