@@ -115,14 +115,14 @@ int main(void)
 	LED_Init();
 	
 	htim7.Instance = TIM7;
-	htim7.Init.Prescaler = 47999;		// 48MHz / 48000 = 1000Hz (asumiendo APB timer clock es 48MHz)
-	htim7.Init.Period = 499;				// 1000Hz / 500 ) = 2Hz = 0.5s
+	htim7.Init.Prescaler = 47999;			// 84MHz / 48000 = 1750Hz (asumiendo APB timer clock es 84MHz)
+	htim7.Init.Period = 499;					// 1750Hz / 500 ) = 3.5Hz = 0.286s
 	
-	HAL_NVIC_EnableIRQ(TIM7_IRQn);	// Enable the peripheral IRQ
-	__HAL_RCC_TIM7_CLK_ENABLE();		// Enable the TIM7 peripheral
+	HAL_NVIC_EnableIRQ(TIM7_IRQn);  	// Habilita la interrupción del periférico
+	__HAL_RCC_TIM7_CLK_ENABLE();	    // Habilita el reloj del periférico TIM7
 	
-	HAL_TIM_Base_Init(&htim7);			// Configure the timer
-	HAL_TIM_Base_Start_IT(&htim7);	// Start the timer
+	HAL_TIM_Base_Init(&htim7);				// Configurar el temporizador
+	HAL_TIM_Base_Start_IT(&htim7);	  // Iniciar el temporizador con interrupciones
 
 #ifdef RTE_CMSIS_RTOS2
   /* Initialize CMSIS-RTOS2 */
