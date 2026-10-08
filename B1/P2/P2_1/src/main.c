@@ -116,7 +116,7 @@ int main(void)
 	
 	htim7.Instance = TIM7;
 	htim7.Init.Prescaler = 47999;			// 84MHz / 48000 = 1750Hz (asumiendo APB timer clock es 84MHz)
-	htim7.Init.Period = 499;					// 1750Hz / 500 ) = 3.5Hz = 0.286s
+	htim7.Init.Period = 2625;					// 1750Hz / 2625 ) = 0.667Hz = 1.5s
 	
 	HAL_NVIC_EnableIRQ(TIM7_IRQn);  	// Habilita la interrupción del periférico
 	__HAL_RCC_TIM7_CLK_ENABLE();	    // Habilita el reloj del periférico TIM7
