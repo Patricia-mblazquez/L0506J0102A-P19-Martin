@@ -80,8 +80,10 @@ static void Error_Handler(void);
 
 static void initPIN_OUTPUT(void);
 static void initTimer(void);
+static void initBotton(void);
 
 TIM_HandleTypeDef tim2;
+static uint32_t p = 41999;
 
 
 /* Private functions ---------------------------------------------------------*/
@@ -113,6 +115,7 @@ int main(void)
      */
 	initPIN_OUTPUT();
 	initTimer();
+	initBotton();
 
 #ifdef RTE_CMSIS_RTOS2
   /* Initialize CMSIS-RTOS2 */
@@ -146,13 +149,13 @@ static void initPIN_OUTPUT(void) {
 
 static void initTimer(void){
 	
-		TIM_OC_InitTypeDef TIM_Channel_InitStruct;
+	TIM_OC_InitTypeDef TIM_Channel_InitStruct;
 	
 	__HAL_RCC_TIM2_CLK_ENABLE();
 	
 	tim2.Instance = TIM2;
 	tim2.Init.Prescaler = 0;		// TIM2 clk 84 MHz
-	tim2.Init.Period = 41999;		// para una freq. de 1 KHz = 1ms -> toggle cada 0.5 ms = 2 KHz
+	tim2.Init.Period = p;				// para una freq. de 1 KHz = 1ms -> toggle cada 0.5 ms = 2 KHz
 															// 84 MHz / p = freq -> p = 84MHz/2KHz = 42000 ciclos	
 	HAL_TIM_OC_Init(&tim2);
 	
@@ -165,6 +168,39 @@ static void initTimer(void){
 	HAL_TIM_OC_Start(&tim2, TIM_CHANNEL_4);
 	
 }
+
+static void initBotton(void) {
+	
+	GPIO_InitTypeDef GPIO_InitStruct;
+	
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+	
+	GPIO_InitStruct.Pin = GPIO_PIN_13;
+	GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+	HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+	
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if(GPIO_Pin == GPIO_PIN_13){
+		if (p != 16799){
+			 p =  16799;		// para una freq. de 2500 Hz = 0.4ms -> toggle cada 0.2 ms = 5 KHz
+											// 84 MHz / p = freq -> p = 84MHz/5KHz = 16800 ciclos	
+		}
+		else{
+			 p = 41999;			// para una freq. de 1 KHz
+		}
+		
+		tim2.Init.Period = p;
+		HAL_TIM_OC_Init(&tim2); 
+
+	}
+	
+}
+
 
 
 /**
