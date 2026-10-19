@@ -23,6 +23,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "Thled1.h"
+#include "Thled2.h"
+#include "Thled3.h"
 
 #ifdef _RTE_
 #include "RTE_Components.h"             // Component selection
@@ -111,6 +113,8 @@ int main(void)
   /* Initialize CMSIS-RTOS2 */
   osKernelInitialize ();
 	Init_Thled1();
+	Init_Thled2();
+	Init_Thled3();
 
   /* Create thread functions that start executing, 
   Example: osThreadNew(app_main, NULL, NULL); */
