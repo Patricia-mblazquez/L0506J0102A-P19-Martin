@@ -1,5 +1,6 @@
 
 #include "Thled1.h"
+#include "Thled2.h"
  
 /*----------------------------------------------------------------------------
  *      Thread 1 'Thled1': Control periodico del LED1
@@ -35,7 +36,7 @@ int Init_Thled1 (void) {
 
 /******** FUNCIÓN DEL HILO ********/
 static void Thled1 (void *argument) {
-	
+
 	initLed();
 	
 	/* Para que los tiempos sean la mitad sin cambiar el codigo fuente,
@@ -43,11 +44,18 @@ static void Thled1 (void *argument) {
 	Asi, cada tick dura la mitad (de 1 ms a 0.5 ms) y los tiempos
 	de osDelay() se reducen a la mitad. */
 	
+	int cont = 0;
+	
   while (1) {
 		HAL_GPIO_WritePin(PORT, PIN, GPIO_PIN_SET);
 		osDelay(200);
 		HAL_GPIO_WritePin(PORT, PIN, GPIO_PIN_RESET);
 		osDelay(800);
+		
+		cont++;
+		if(cont == 5){
+			osThreadFlagsSet(tid_Thled2, 0x0001);
+		}
 		
   }
 }

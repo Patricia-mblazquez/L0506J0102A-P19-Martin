@@ -8,4 +8,7 @@
 /******** DECLARACIÓN DE FUNCIONES ********/
 int Init_Thled3(void);
  
+/******** VARIABLES GLOBALES ********/
+extern osThreadId_t tid_Thled3;
+
 #endif

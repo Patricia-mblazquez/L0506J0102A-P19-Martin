@@ -1,5 +1,6 @@
 
 #include "Thled2.h"
+#include "Thled3.h"
  
 /*----------------------------------------------------------------------------
  *      Thread 2 'Thled2': Control periodico del LED2
@@ -10,7 +11,7 @@
 #define PORT	GPIOB 
 
 /******** VARIABLES ********/
-static osThreadId_t tid_Thled2;                        // thread id
+osThreadId_t tid_Thled2;                        // thread id
  
 /******** DECLARACIÓN DE FUNCIONES ********/
 int Init_Thled2 (void);
@@ -37,12 +38,20 @@ int Init_Thled2 (void) {
 static void Thled2 (void *argument) {
 	
 	initLed();
-	
+		
   while (1) {
-		HAL_GPIO_WritePin(PORT, PIN, GPIO_PIN_SET);
-		osDelay(137);
-		HAL_GPIO_WritePin(PORT, PIN, GPIO_PIN_RESET);
-		osDelay(137);
+		osThreadFlagsWait(0x0001, osFlagsWaitAny, osWaitForever);
+
+		for(int i=0; i<20; i++){
+			HAL_GPIO_WritePin(PORT, PIN, GPIO_PIN_SET);
+			osDelay(137);
+			HAL_GPIO_WritePin(PORT, PIN, GPIO_PIN_RESET);
+			osDelay(137);
+			
+			if(i == 15){
+				osThreadFlagsSet(tid_Thled3, 0x0001);
+			}
+		}
 		
   }
 }
@@ -51,7 +60,7 @@ static void Thled2 (void *argument) {
 static void initLed(void){
 	GPIO_InitTypeDef GPIO_InitStruct;
     
-	__HAL_RCC_GPIOB_CLK_ENABLE();		// SE HACE 3 VECES, INECESARIO. SOLUCION? Da igual o incluir leds.c 
+	__HAL_RCC_GPIOB_CLK_ENABLE();
 	
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;

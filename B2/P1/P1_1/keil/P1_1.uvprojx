@@ -424,16 +424,6 @@
               <FileType>5</FileType>
               <FilePath>..\src\Thled3.h</FilePath>
             </File>
-            <File>
-              <FileName>leds.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\src\leds.c</FilePath>
-            </File>
-            <File>
-              <FileName>leds.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\src\leds.h</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
