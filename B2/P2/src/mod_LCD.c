@@ -44,6 +44,13 @@ static void Th_LCD_test (void *argument);
 void LCD_Reset(void);
 void cb_spi(uint32_t event);
 
+/**** Comunicación básica con el LCD ****/
+void LCD_wr_data(unsigned char data);
+void LCD_wr_cmd(unsigned char cmd);
+
+/**** Configuración del LCD ****/
+void LCD_init(void);
+
 /*==========================================================
 =                         FUNCIONES                        =
 ==========================================================*/
@@ -64,6 +71,7 @@ static void Th_LCD (void *argument) {
 	
 	// Llamadas a las funciones de inicialización
 	LCD_Reset();
+	LCD_init();
 	
   while (1) {
     // Esperar un flag desde el thread de test
@@ -104,7 +112,7 @@ void LCD_Reset(void){
 	SPIdrv->Initialize(cb_spi);
 	SPIdrv->PowerControl(ARM_POWER_FULL);
 	SPIdrv->Control(ARM_SPI_MODE_MASTER | ARM_SPI_CPOL1_CPHA1 | 
-		ARM_SPI_MSB_LSB |	ARM_SPI_DATA_BITS(8), 20000000); 		//poner a 1MHz para ver mejor todo en el analizador logico 1000000 el correcto es de: 20000000
+		ARM_SPI_MSB_LSB |	ARM_SPI_DATA_BITS(8), 1000000); 		//poner a 1MHz para ver mejor todo en el analizador logico 1000000 el correcto es de: 20000000
 	SPIdrv->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_INACTIVE);
 	
 	// PASO 2: Configurar los pines de GPIO (RESET, A0, CS)
@@ -185,4 +193,22 @@ void LCD_wr_cmd(unsigned char cmd){
 	
 	// Seleccionar CS = 1;
 	HAL_GPIO_WritePin(PORT_LCD_CS, PIN_LCD_CS, GPIO_PIN_SET);
+}
+
+/******** Configuración del LCD ********/
+void LCD_init(void){
+	
+	LCD_wr_cmd(0xAE);		// Display off
+	LCD_wr_cmd(0xA2);		// Fija el valor de la relación de la tensión de polarización del LCD a 1/9 
+	LCD_wr_cmd(0xA0);		// El direccionamiento de la RAM de datos del display es la normal
+	LCD_wr_cmd(0xC8);		// El scan en las salidas COM es el normal
+	LCD_wr_cmd(0x22);		// Fija la relación de resistencias interna a 2
+	LCD_wr_cmd(0x2F);		// Power on
+	LCD_wr_cmd(0x40);		// Display empieza en la línea 0
+	LCD_wr_cmd(0xAF);		// Display ON
+	LCD_wr_cmd(0x81);		// Contraste
+	LCD_wr_cmd(0x0F);		// Valor Contraste
+	LCD_wr_cmd(0xA4);		// Display all points normal
+	LCD_wr_cmd(0xA6);		// LCD Display normal
+
 }
