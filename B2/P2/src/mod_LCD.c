@@ -104,7 +104,7 @@ void LCD_Reset(void){
 	SPIdrv->Initialize(cb_spi);
 	SPIdrv->PowerControl(ARM_POWER_FULL);
 	SPIdrv->Control(ARM_SPI_MODE_MASTER | ARM_SPI_CPOL1_CPHA1 | 
-		ARM_SPI_MSB_LSB |	ARM_SPI_DATA_BITS(8), 1000000); 		//poner a 1MHz para ver mejor todo en el analizador logico 1000000 el correcto es de: 20000000
+		ARM_SPI_MSB_LSB |	ARM_SPI_DATA_BITS(8), 20000000); 		//poner a 1MHz para ver mejor todo en el analizador logico 1000000 el correcto es de: 20000000
 	SPIdrv->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_INACTIVE);
 	
 	// PASO 2: Configurar los pines de GPIO (RESET, A0, CS)
@@ -150,3 +150,39 @@ void cb_spi(uint32_t event){
 	}
 }
 
+
+/******** Escribe un dato en el LCD ********/
+void LCD_wr_data(unsigned char data){
+		
+	// Seleccionar CS = 0
+	HAL_GPIO_WritePin(PORT_LCD_CS, PIN_LCD_CS, GPIO_PIN_RESET);
+	// Seleccionar A0 = 1
+	HAL_GPIO_WritePin(PORT_LCD_A0, PIN_LCD_A0, GPIO_PIN_SET);
+	
+	// Escribir un dato (dat) usando la funcion SPIDrv->Send(...);
+	SPIdrv->Send(&data, sizeof(data));
+	
+	// Esperar al flag enviado desde la cb_spi() de transferencia finalizada
+	osThreadFlagsWait(0x02, osFlagsWaitAny, osWaitForever);
+
+	// Seleccionar CS = 1;
+	HAL_GPIO_WritePin(PORT_LCD_CS, PIN_LCD_CS, GPIO_PIN_SET);
+}
+
+/******** Escribe un comando en el LCD ********/
+void LCD_wr_cmd(unsigned char cmd){
+	
+	// Seleccionar CS = 0
+	HAL_GPIO_WritePin(PORT_LCD_CS, PIN_LCD_CS, GPIO_PIN_RESET);
+	// Seleccionar A0 = 0
+	HAL_GPIO_WritePin(PORT_LCD_A0, PIN_LCD_A0, GPIO_PIN_RESET);
+	
+	// Escribir un comando (cmd) usando la funcion SPIDrv->Send(...);
+	SPIdrv->Send(&cmd, sizeof(cmd));
+		
+	// Esperar al flag enviado desde la cb_spi() de transferencia finalizada
+	osThreadFlagsWait(0x02, osFlagsWaitAny, osWaitForever);
+	
+	// Seleccionar CS = 1;
+	HAL_GPIO_WritePin(PORT_LCD_CS, PIN_LCD_CS, GPIO_PIN_SET);
+}
