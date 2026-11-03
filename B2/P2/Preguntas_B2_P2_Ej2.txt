@@ -1,0 +1,27 @@
+Responda a las siguientes preguntas:
+
+1. ¿Cuál es la máxima frecuencia que puede utilizarse en la señal de reloj del display? ¿Dónde
+está indicada esta información?
+Enlace 2 -> Timing Characteristics -> Table 30 
+SPI Clock Period = 50 ns = 20 MHz
+
+2. ¿Quién y cómo se genera la señal de CS para el display?
+Enlace 1 -> En Pin Description (pagina 6): 
+	Pin No. |	Symbol	|	External Connection	|	Function Description
+	17	|	 /CS1	|	MPU 			|	Active LOW Chip Select signal
+
+- La señal de CS la genera el microcontrolador (MPU) conectado al display
+- Se activa en nivel bajo (LOW) para habilitar la comunicacion SPI con el diplay
+
+3. ¿Por qué se ha programado el modo CPOL1 y CPHA1? Justifíquelo con el cronograma del
+display disponible en la hoja de catálogo.
+
+
+4. ¿Qué duración debe tener el pulso de RESET? Para responder a esta pregunta debe buscar la
+información en la hoja de catálogo del display incluido en la información técnica del fabricante.
+Enlace 2 -> Timing Characteristics -> Table 36
+Signal /RES -> Rating min. 1 us
+
+Referencias:
+Enlace 1 -> https://www.newhavendisplay.com/specs/NHD-C12832A1Z-FSW-FBW-3V3.pdf
+Enlace 2 -> https://www.lcd-module.de/eng/pdf/zubehoer/st7565r.pdf
