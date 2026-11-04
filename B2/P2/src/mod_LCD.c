@@ -31,7 +31,10 @@ osThreadId_t tid_Th_LCD_test;
 extern ARM_DRIVER_SPI Driver_SPI1;
 ARM_DRIVER_SPI* SPIdrv = &Driver_SPI1;
 uint32_t spi_errors = 0;
- 
+
+/**** Escritura en LCD ****/
+static unsigned char buffer[512];		// Memoria local del LCD (4 páginas x 128 bytes)
+
 /*==========================================================
 =                  DECLARACIÓN DE FUNCIONES                 =
 ==========================================================*/
@@ -50,6 +53,13 @@ void LCD_wr_cmd(unsigned char cmd);
 
 /**** Configuración del LCD ****/
 void LCD_init(void);
+
+/******** Escritura de datos en el LCD ********/
+void LCD_update(void);
+static void LCD_buffer_square(void);
+static void LCD_buffer_A_up(void);
+static void LCD_buffer_A_down(void);
+static void LCD_buffer_progress_bar(void);
 
 /*==========================================================
 =                         FUNCIONES                        =
@@ -72,12 +82,18 @@ static void Th_LCD (void *argument) {
 	// Llamadas a las funciones de inicialización
 	LCD_Reset();
 	LCD_init();
+	LCD_update();
 	
   while (1) {
     // Esperar un flag desde el thread de test
 		osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
 		
 		// Representar en el LCD la información
+		//LCD_buffer_square();
+		//LCD_buffer_A_up();
+		//LCD_buffer_A_down();
+		LCD_buffer_progress_bar();
+			
   }
 }
 
@@ -212,3 +228,108 @@ void LCD_init(void){
 	LCD_wr_cmd(0xA6);		// LCD Display normal
 
 }
+
+/******** Escritura de datos en el LCD ********/
+void LCD_update(void){
+	int i;
+	
+	LCD_wr_cmd(0x00); // 4 bits de la parte baja de la dirección a 0
+	LCD_wr_cmd(0x10);	// 4 bits de la parte alta de la dirección a 0
+	LCD_wr_cmd(0xB0); // Página 0
+	
+	for(i=0; i<128; i++){
+		LCD_wr_data(buffer[i]);
+	}
+	
+	LCD_wr_cmd(0x00);	// 4 bits de la parte baja de la dirección a 0
+	LCD_wr_cmd(0x10);	// 4 bits de la parte alta de la dirección a 0		
+	LCD_wr_cmd(0xB1);	// Página 1
+	
+	for(i=128; i<256; i++){
+		LCD_wr_data(buffer[i]);
+	}
+	
+	LCD_wr_cmd(0x00);
+	LCD_wr_cmd(0x10);		
+	LCD_wr_cmd(0xB2);	// Página 2
+	
+	for(i=256; i<384; i++){
+		LCD_wr_data(buffer[i]);
+	}
+	
+	LCD_wr_cmd(0x00);
+	LCD_wr_cmd(0x10);		
+	LCD_wr_cmd(0xB3);	// Página 3
+	
+	for(i=384; i<512; i++){
+		LCD_wr_data(buffer[i]);
+	}
+	
+}
+
+/*------- Ejemplo: Imprime un cuadrado en la parte superior izquierda -------*/
+static void LCD_buffer_square(void){
+	
+	for(int i=0; i<512; i++){
+		buffer[i] = 0x00; 	// Limpiar todo el buffer
+	}
+	
+	for(int i=0; i<8; i++){
+		buffer[i] = 0xFF; 
+	}
+	
+	LCD_update();
+}
+
+/*------- Ejemplo: Escribir la letra 'A' en la página 0 (parte superior) -------*/
+static void LCD_buffer_A_up (void){
+	
+	for(int i=0; i<512; i++){
+		buffer[i] = 0x00; 	// Limpiar todo el buffer
+	}
+	
+	buffer[0] = 0x00;
+	buffer[1] = 0x78;
+	buffer[2] = 0x24;
+	buffer[3] = 0x22;
+	buffer[4] = 0x22;
+	buffer[5] = 0x24;
+	buffer[6] = 0x78;
+	buffer[7] = 0x00;
+	
+	LCD_update();
+}
+
+/*------- Ejemplo: Escribir la letra 'A' en la página 3 (parte inferior) -------*/
+static void LCD_buffer_A_down (void){
+	for(int i=0; i<512; i++){
+		buffer[i] = 0x00; 	// Limpiar todo el buffer
+	}
+	
+	buffer[384] = 0x00;
+	buffer[385] = 0x78;
+	buffer[386] = 0x24;
+	buffer[387] = 0x22;
+	buffer[388] = 0x22;
+	buffer[389] = 0x24;
+	buffer[390] = 0x78;
+	buffer[391] = 0x00;
+	
+	LCD_update();
+}
+
+/*------- Ejemplo: Dibujar barra que ocupa el alto del LCD -------*/
+static void LCD_buffer_progress_bar(void){
+	static int ancho_barra = 0; 
+	if (ancho_barra < 128) { 
+		buffer[ancho_barra]       = 0xFF; // Pinta 8 píxeles en la Pág 0 (arriba)
+		buffer[ancho_barra + 128] = 0xFF; // Pinta 8 píxeles en la Pág 1
+		buffer[ancho_barra + 256] = 0xFF; // Pinta 8 píxeles en la Pág 2
+		buffer[ancho_barra + 384] = 0xFF; // Pinta 8 píxeles en la Pág 3 (abajo)
+            
+		ancho_barra++;
+   }
+	
+	LCD_update();
+}
+
