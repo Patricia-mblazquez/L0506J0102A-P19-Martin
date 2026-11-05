@@ -1,0 +1,23 @@
+Responda a las siguientes preguntas:
+
+1. Teniendo en cuenta la información existente en el fichero Arial12x12.h, ¿Cuántos bytes se
+utilizan para conformar un carácter en este tipo de letra?
+	Se utilizan 25 bytes por caracter:
+	- 1 byte para la información del ancho
+	- 24 bytes para los píxeles (12 columnas x 2 bytes/columna)
+
+2. ¿En qué posición se ha escrito el carácter? Podría escribirse en otro lugar en el LCD, 
+piense cómo sería el procedimiento.
+	En la esquina superior izquierda.
+	- Desplazamiento horizontal, cambiando el valor de positionL1 (entre 0 y 127)
+	- Desplazamiento vertical, cambiando los índices de las páginas del buffer:
+		* Uso se páginas 0 y 1: buffer[i + positionL1] y buffer[i + 128 + positionL1]
+		* Uso se páginas 1 y 2: buffer[i + 128 + positionL1] y buffer[i + 256 + positionL1]
+		* Uso se páginas 2 y 3: buffer[i + 256 + positionL1] y buffer[i + 384 + positionL1]
+
+3. Utilizando este tipo de letra, ¿Cuántas líneas de texto se podrían visualizar en todo el
+LCD?
+	Altura del LCD = 32 píxeles
+	Altura letra = 12 píxeles
+	32/12 = 2.67 -> Se pueden visualizae 2 líneas de texto 
+
