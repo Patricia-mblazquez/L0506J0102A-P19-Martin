@@ -37,6 +37,7 @@ uint32_t spi_errors = 0;
 /**** Escritura en LCD ****/
 static unsigned char buffer[512];		// Memoria local del LCD (4 páginas x 128 bytes)
 static uint16_t positionL1 = 0;
+static uint16_t positionL2 = 0;
 
 /*==========================================================
 =                  DECLARACIÓN DE FUNCIONES                 =
@@ -61,6 +62,8 @@ void LCD_init(void);
 void LCD_update(void);
 void LCD_symbolToLocalBuffer_L1(uint8_t symbol);
 void Escribe_L1(uint8_t *cadena);
+void LCD_symbolToLocalBuffer_L2(uint8_t symbol);
+void Escribe_L2(uint8_t *cadena);
 
 /*---- EJEMPLOS ----*/
 static void LCD_buffer_square(void);
@@ -96,7 +99,8 @@ static void Th_LCD (void *argument) {
 		osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
 		
 		// Representar en el LCD la información
-		Escribe_L1((uint8_t *)"Prueba LCD");
+		Escribe_L1((uint8_t *)"Prueba LCD linea 1");
+		Escribe_L2((uint8_t *)"Prueba LCD linea 2");
 
   }
 }
@@ -282,15 +286,13 @@ void LCD_symbolToLocalBuffer_L1(uint8_t symbol){
 
 	if (char_width + positionL1 > 128){
 		positionL1 = 0;
-		for(int i=0; i<512; i++){
-			buffer[i] = 0x00;
-		}
 	}
 	
 	for(i=0; i < 12; i++){
 		value1 = Arial12x12[offset+i*2+1];
 		value2 = Arial12x12[offset+i*2+2];
 		
+		// Se usan las páginas 0 y 1
 		buffer[i + positionL1]=value1;
 		buffer[i + 128 + positionL1]=value2;
 	}
@@ -311,6 +313,48 @@ void Escribe_L1(uint8_t *cadena){
 	// Recorrer la cadena
 	for(i=0; cadena[i] != '\0'; i++){
 		LCD_symbolToLocalBuffer_L1(cadena[i]);
+	}
+	LCD_update();
+}
+
+/******** Representar un carácter 12x12 en la línea 2 ********/
+void LCD_symbolToLocalBuffer_L2(uint8_t symbol){
+	
+	uint8_t i, value1, value2, char_width;
+	uint16_t offset = 0;
+	
+	offset = 25*(symbol - ' ');
+	char_width = Arial12x12[offset];
+
+	if (char_width + positionL2 > 128){
+		positionL2 = 0;
+	}
+	
+	for(i=0; i < 12; i++){
+		value1 = Arial12x12[offset+i*2+1];
+		value2 = Arial12x12[offset+i*2+2];
+		
+		// Se usan las páginas 2 y 3
+		buffer[i + 256 + positionL2]=value1;
+		buffer[i + 384 + positionL2]=value2;
+	}
+	positionL2 = positionL2+Arial12x12[offset];
+
+}
+
+/******** Escritura de una línea de texto en la línea 2 ********/
+void Escribe_L2(uint8_t *cadena){
+	uint8_t i;
+	positionL2 = 0;
+	
+	// Limpiar la linea 2 antes de escribir
+	for(int j=256; j<512; j++){
+		buffer[j] = 0x00; 	
+	}
+	
+	// Recorrer la cadena
+	for(i=0; cadena[i] != '\0'; i++){
+		LCD_symbolToLocalBuffer_L2(cadena[i]);
 	}
 	LCD_update();
 }
