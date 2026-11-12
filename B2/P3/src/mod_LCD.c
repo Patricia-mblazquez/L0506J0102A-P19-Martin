@@ -7,6 +7,7 @@
 #include "stm32f4xx_hal.h"
 #include "Arial12x12.h"
 #include "string.h"
+#include <stdio.h>
 
 /*==========================================================
 =                ESTRUCTURAS DE DATOS DEL LCD               =
@@ -139,14 +140,15 @@ int Init_Th_LCD_test (void) {
 static void Th_LCD_test (void *argument) {
  (void)argument;
 	MSGQUEUE_LCD_t msg;
-	uint8_t contador = 0;
+	//uint8_t contador = 0;
 	
   while (1) {
 		// Esperar 1 segundo
 		osDelay(1000);
 		
+		// EJERCICIO 4: Comunicación varios mensajes
 		// Alternar diferentes mensajes
-		switch (contador % 4){
+		/*switch (contador % 4){
 			case 0:
 				strcpy((char*)msg.Buf, "SBM - Practica 3");
 				msg.linea = 1;
@@ -167,6 +169,16 @@ static void Th_LCD_test (void *argument) {
 		contador++;
 		
 		// Enviar el mensaje a la cola
+		osMessageQueuePut(q_lcd, &msg, 0U, 10U);*/
+		
+		// EJERCICIO 5: Uso de la funcion printf
+		uint32_t valor1 = 1234;
+		float valor2= 3.14159;
+		sprintf((char*)msg.Buf, "Prueba valor1: %u", valor1);
+		msg.linea = 1;
+		osMessageQueuePut(q_lcd, &msg, 0U, 10U);
+		sprintf((char*)msg.Buf, "Prueba valor2: %.5f", valor2);
+		msg.linea = 2;
 		osMessageQueuePut(q_lcd, &msg, 0U, 10U);
   }
 }
