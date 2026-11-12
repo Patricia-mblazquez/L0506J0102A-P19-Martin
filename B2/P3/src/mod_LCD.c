@@ -1,12 +1,21 @@
+/*----------------------------------------------------------------------------
+ *      Thread 'mod_LCD': Representación de información por el LCD
+ *---------------------------------------------------------------------------*/
+
 #include "cmsis_os2.h"                          // CMSIS RTOS header file
 #include "Driver_SPI.h"
 #include "stm32f4xx_hal.h"
 #include "Arial12x12.h"
 #include "string.h"
 
-/*----------------------------------------------------------------------------
- *      Thread 'mod_LCD': Plantilla
- *---------------------------------------------------------------------------*/
+/*==========================================================
+=                ESTRUCTURAS DE DATOS DEL LCD               =
+==========================================================*/
+
+typedef struct{
+	uint8_t Buf[40];
+	uint8_t linea;
+}MSGQUEUE_LCD_t;
 
 /*==========================================================
 =                           MACROS                          =
@@ -25,9 +34,10 @@
 =                VARIABLES Y OBJETOS GLOBALES               =
 ==========================================================*/
 
-/**** Creación de los Thread ****/
+/**** Creación de los Thread y Colas ****/
 osThreadId_t tid_Th_LCD;  
 osThreadId_t tid_Th_LCD_test; 
+static osMessageQueueId_t q_lcd;
 
 /**** Inicialización del SPI ****/
 extern ARM_DRIVER_SPI Driver_SPI1;
@@ -72,12 +82,19 @@ static void LCD_buffer_A_down(void);
 static void LCD_buffer_progress_bar(void);
 
 /*==========================================================
-=                         FUNCIONES                        =
+=            CREACIÓN DE HILOS Y COLA DE MENSAJES           =
 ==========================================================*/
 
 /******** Thread de LCD ********/
 int Init_Th_LCD (void) {
- 
+	
+	// Crear la cola de mensajes
+	q_lcd = osMessageQueueNew(4, sizeof(MSGQUEUE_LCD_t), NULL);
+	if (q_lcd == NULL) {
+    return(-1);
+  }
+	
+	// Crear el hilo
   tid_Th_LCD = osThreadNew(Th_LCD, NULL, NULL);
   if (tid_Th_LCD == NULL) {
     return(-1);
@@ -88,6 +105,7 @@ int Init_Th_LCD (void) {
  
 static void Th_LCD (void *argument) {
  (void)argument;
+	MSGQUEUE_LCD_t msg;
 	
 	// Llamadas a las funciones de inicialización
 	LCD_Reset();
@@ -95,13 +113,15 @@ static void Th_LCD (void *argument) {
 	LCD_update();
 	
   while (1) {
-    // Esperar un flag desde el thread de test
-		osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
+    // Esperar indefinidamente a que llegue un mensaje a la cola
+		osMessageQueueGet(q_lcd, &msg, NULL, osWaitForever);
 		
-		// Representar en el LCD la información
-		Escribe_L1((uint8_t *)"Prueba LCD linea 1");
-		Escribe_L2((uint8_t *)"Prueba LCD linea 2");
-
+		// Actualizar el LCD según la linea indicada en el mensaje
+		if(msg.linea == 1){
+			Escribe_L1(msg.Buf);
+		} else if(msg.linea == 2){
+			Escribe_L2(msg.Buf);
+		}
   }
 }
 
@@ -118,15 +138,42 @@ int Init_Th_LCD_test (void) {
  
 static void Th_LCD_test (void *argument) {
  (void)argument;
+	MSGQUEUE_LCD_t msg;
+	uint8_t contador = 0;
 	
   while (1) {
 		// Esperar 1 segundo
 		osDelay(1000);
 		
-		// Enviar una señal a th_LCD para representar información en el LCD
-		osThreadFlagsSet(tid_Th_LCD, 0x01);
+		// Alternar diferentes mensajes
+		switch (contador % 4){
+			case 0:
+				strcpy((char*)msg.Buf, "SBM - Practica 3");
+				msg.linea = 1;
+				break;
+			case 1:
+				strcpy((char*)msg.Buf, "Escritura en LCD");
+				msg.linea = 2;
+				break;
+			case 2:
+				strcpy((char*)msg.Buf, "Mensaje de prueba");
+				msg.linea = 1;
+				break;
+			case 3:
+				strcpy((char*)msg.Buf, "Linea 2 cambiada");
+				msg.linea = 2;
+				break;
+		}
+		contador++;
+		
+		// Enviar el mensaje a la cola
+		osMessageQueuePut(q_lcd, &msg, 0U, 10U);
   }
 }
+
+/*==========================================================
+=              CONFIGURACIÓN Y COMUNICACIÓN SPI             =
+==========================================================*/
 
 /******** Inicialización y Reset del LCD ********/
 void LCD_Reset(void){
@@ -236,6 +283,10 @@ void LCD_init(void){
 	LCD_wr_cmd(0xA6);		// LCD Display normal
 
 }
+
+/*==========================================================
+=             GESTIÓN DEL BUFFER Y TEXTO (L1/L2)            =
+==========================================================*/
 
 /******** Escritura de datos en el LCD ********/
 void LCD_update(void){
